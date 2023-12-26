@@ -11,7 +11,7 @@ const HeaderWrapper = styled.div`
   height: 44px;
   display: flex;
   padding-left: var(--offset);
-  border: solid var(--border-color);
+  border-bottom: solid var(--border-color);
 `;
 
 const Icon = styled.img`

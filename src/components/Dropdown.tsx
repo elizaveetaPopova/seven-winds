@@ -19,10 +19,11 @@ const TextSection = styled.div`
 const CustomDropdown = matherialStyle(Button)({
   height: '44px',
   width: '100%',
-  paddingLeft: 0,
+  paddingLeft: '20px',
   paddingRight: '7px',
   display: 'flex',
   justifyContent: 'space-between',
+  borderRadius: 0,
 });
 
 const Icon = matherialStyle(KeyboardArrowDownIcon)(({ theme }) => ({
