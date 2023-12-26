@@ -8,7 +8,7 @@ import { CustomButton as Button } from './Button';
 
 const HeaderWrapper = styled.div`
   background-color: var(--dashboard-color);
-  height: 44px;
+  height: var(--heigth-of-blocks);
   display: flex;
   padding-left: var(--offset);
   border-bottom: solid var(--border-color);

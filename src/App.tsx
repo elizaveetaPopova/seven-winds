@@ -13,12 +13,23 @@ const Wrapper = styled.div`
   height: 100vh;
 `;
 
+const Content = styled.div`
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+`;
+
 function App() {
   const [theme] = useState(() =>
     createTheme({
       palette: {
         primary: {
           main: cssVar('--text-color-main'),
+          light: cssVar('--text-color-grey'),
+        },
+        secondary: {
+          main: cssVar('--main-bg-color'),
+          light: cssVar('--border-color'),
         },
       },
     }),
@@ -28,8 +39,10 @@ function App() {
     <ThemeProvider theme={theme}>
       <Wrapper>
         <Header />
-        <NavigationPanel />
-        <Dashboard />
+        <Content>
+          <NavigationPanel />
+          <Dashboard />
+        </Content>
       </Wrapper>
     </ThemeProvider>
   );
