@@ -8,9 +8,10 @@ import { CustomButton as Button } from './Button';
 
 const HeaderWrapper = styled.div`
   background-color: var(--dashboard-color);
-  height: 43px;
+  height: 44px;
   display: flex;
   padding-left: var(--offset);
+  border: solid var(--border-color);
 `;
 
 const Icon = styled.img`
@@ -20,6 +21,7 @@ const Icon = styled.img`
     margin-left: var(--offset);
   }
 `;
+
 const Header = () => {
   return (
     <HeaderWrapper>

@@ -1,8 +1,7 @@
-import { styled } from '@mui/material/styles';
-import { Button } from '@mui/material';
+import { Button, ButtonProps, styled } from '@mui/material';
 
-export const CustomButton = styled(Button)({
-  color: '#ffffff',
+const StyledButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.primary.main,
   fontFamily: 'Roboto',
   textTransform: 'capitalize',
   fontSize: '14px',
@@ -17,4 +16,12 @@ export const CustomButton = styled(Button)({
   '&::first-of-type': {
     paddingLeft: '17px',
   },
-});
+}));
+
+interface CustomButtonProps extends ButtonProps {
+  children: string;
+}
+
+export const CustomButton = ({ children, ...props }: CustomButtonProps) => {
+  return <StyledButton {...props}>{children}</StyledButton>;
+};
