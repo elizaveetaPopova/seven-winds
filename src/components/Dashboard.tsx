@@ -1,4 +1,7 @@
 import { styled } from 'styled-components';
+import { CircularProgress } from '@mui/material';
+
+import { useGetRowsQuery } from '../services/outlay';
 
 import Table from './Table';
 
@@ -18,11 +21,24 @@ const Caption = styled.div`
   border-right: solid var(--border-color);
 `;
 
+const StatusWrapp = styled.div`
+  display: flex;
+  justify-content: center;
+  color: var(--text-color-main);
+`;
+
 const Dashboard = () => {
+  const { data, error, isLoading } = useGetRowsQuery();
   return (
     <DashboardWrapper>
       <Caption>Строительно-монтажные работы</Caption>
-      <Table />
+      {isLoading && (
+        <StatusWrapp>
+          <CircularProgress />
+        </StatusWrapp>
+      )}
+      {error && <StatusWrapp>Произошла ошибка</StatusWrapp>}
+      {data && <Table rows={data} />}
     </DashboardWrapper>
   );
 };

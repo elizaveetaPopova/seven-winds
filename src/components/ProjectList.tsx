@@ -15,7 +15,7 @@ const ProjectList = ({ projects }: { projects: Project[] }) => {
   return (
     <ProjectListWrapper>
       {projects.map((project: Project) => {
-        return <ListItem item={project} />;
+        return <ListItem item={project} key={project.id} />;
       })}
     </ProjectListWrapper>
   );

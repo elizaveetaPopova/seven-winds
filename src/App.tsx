@@ -19,7 +19,7 @@ const Content = styled.div`
   height: 100%;
 `;
 
-function App() {
+const App = () => {
   const [theme] = useState(() =>
     createTheme({
       palette: {
@@ -30,6 +30,7 @@ function App() {
         secondary: {
           main: cssVar('--main-bg-color'),
           light: cssVar('--border-color'),
+          dark: cssVar('--text-color-geen'),
         },
       },
     }),
@@ -46,6 +47,6 @@ function App() {
       </Wrapper>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

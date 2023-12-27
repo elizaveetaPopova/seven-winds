@@ -1,5 +1,4 @@
 import {
-  Paper,
   TableContainer,
   Table as MuiTable,
   TableHead,
@@ -9,6 +8,12 @@ import {
   tableCellClasses,
   TableBody,
 } from '@mui/material';
+import { useState } from 'react';
+
+import RowActions from '../RowActions';
+import { useCreateRowMutation } from '../../services/outlay';
+import Input from '../Input';
+import { GetRowsResponse, IRowRequest } from '../../services/outlay/types';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -34,28 +39,50 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const createData = (
-  level: number,
-  title: string,
-  salary: number,
-  equipment: number,
-  overheads: number,
-  estimatedProfit: number,
-) => {
-  return { level, title, salary, equipment, overheads, estimatedProfit };
-};
+interface TableProps {
+  rows: GetRowsResponse[];
+}
 
-const rows = [
-  createData(159, 'Frozen yoghurt', 6.0, 24, 4.0, 200),
-  createData(237, 'Ice cream sandwich', 9.0, 37, 4.3, 200),
-  createData(262, 'Eclair', 16.0, 24, 6.0, 200),
-  createData(305, 'Cupcake', 3.7, 67, 4.3, 200),
-  createData(356, 'Gingerbread', 16.0, 49, 3.9, 200),
-];
+const Table = ({ rows }: TableProps) => {
+  const [createRow, { isError }] = useCreateRowMutation();
+  const [newRow, setNewRow] = useState({
+    equipmentCosts: '',
+    estimatedProfit: '',
+    machineOperatorSalary: 0,
+    mainCosts: 0,
+    materials: 0,
+    mimExploitation: 0,
+    overheads: '',
+    parentId: 0,
+    rowName: '',
+    salary: '',
+    supportCosts: 0,
+  });
 
-console.log('rows :>> ', rows);
+  const handleCreateRow = async (row: IRowRequest) => {
+    await createRow(row);
+  };
 
-const Table = () => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const row = {
+      ...newRow,
+      equipmentCosts: +newRow.equipmentCosts,
+      estimatedProfit: +newRow.estimatedProfit,
+      overheads: +newRow.overheads,
+      salary: +newRow.salary,
+    };
+
+    if (e.key === 'Enter') {
+      handleCreateRow(row);
+    }
+  };
+
+  const handleInputValue = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setNewRow({ ...newRow, rowName: e.target.value });
+  };
+
   return (
     <TableContainer sx={{ padding: '0 10px' }}>
       <MuiTable sx={{ minWidth: 700 }} aria-label="customized table">
@@ -78,14 +105,68 @@ const Table = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <StyledTableRow key={row.level}>
+          {rows.length === 0 && (
+            <StyledTableRow>
               <StyledTableCell component="th" scope="row">
-                {row.level}
+                <RowActions onCreate={handleCreateRow} />
               </StyledTableCell>
-              <StyledTableCell>{row.title}</StyledTableCell>
+              <StyledTableCell>
+                <Input
+                  value={newRow.rowName}
+                  onChange={(e) => handleInputValue(e)}
+                  onKeyDown={handleKeyDown}
+                />
+              </StyledTableCell>
+              <StyledTableCell>
+                <Input
+                  value={newRow.salary}
+                  onChange={(e) => {
+                    setNewRow({ ...newRow, salary: e.target.value });
+                  }}
+                  type="number"
+                  onKeyDown={handleKeyDown}
+                />
+              </StyledTableCell>
+              <StyledTableCell>
+                <Input
+                  value={newRow.equipmentCosts}
+                  onChange={(e) => {
+                    setNewRow({ ...newRow, equipmentCosts: e.target.value });
+                  }}
+                  type="number"
+                  onKeyDown={handleKeyDown}
+                />
+              </StyledTableCell>
+              <StyledTableCell>
+                <Input
+                  value={newRow.overheads}
+                  onChange={(e) => {
+                    setNewRow({ ...newRow, overheads: e.target.value });
+                  }}
+                  type="number"
+                  onKeyDown={handleKeyDown}
+                />
+              </StyledTableCell>
+              <StyledTableCell>
+                <Input
+                  value={newRow.estimatedProfit}
+                  onChange={(e) => {
+                    setNewRow({ ...newRow, estimatedProfit: e.target.value });
+                  }}
+                  type="number"
+                  onKeyDown={handleKeyDown}
+                />
+              </StyledTableCell>
+            </StyledTableRow>
+          )}
+          {rows.map((row) => (
+            <StyledTableRow key={row.rowName}>
+              <StyledTableCell component="th" scope="row">
+                <RowActions onCreate={handleCreateRow} />
+              </StyledTableCell>
+              <StyledTableCell>{row.rowName}</StyledTableCell>
               <StyledTableCell>{row.salary}</StyledTableCell>
-              <StyledTableCell>{row.equipment}</StyledTableCell>
+              <StyledTableCell>{row.equipmentCosts}</StyledTableCell>
               <StyledTableCell>{row.overheads}</StyledTableCell>
               <StyledTableCell>{row.estimatedProfit}</StyledTableCell>
             </StyledTableRow>
