@@ -4,7 +4,7 @@ export interface EntityResponse {
 }
 
 export interface GetRowsResponse extends IRowResponse {
-  child: [];
+  child: GetRowsResponse[];
 }
 
 export interface IRowRequest {
@@ -33,4 +33,8 @@ export interface IRowResponse {
   salary: number;
   supportCosts: number;
   total: number;
+}
+export interface IActionRowResponse {
+  changed: IRowResponse[];
+  current: IRowResponse;
 }

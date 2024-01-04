@@ -4,10 +4,10 @@ import { useState } from 'react';
 
 import createIcon from '../icons/adding.svg';
 import removeRow from '../icons/TrashFill.svg';
-import { IRowRequest } from '../services/outlay/types';
 
 interface RowActionsProps {
-  onCreate: (row: IRowRequest) => Promise<void>;
+  onCreate: () => void;
+  onRemove: () => void;
 }
 
 const Wrapper = styled.div`
@@ -28,7 +28,7 @@ const Icon = styled.img`
   width: 24px;
 `;
 
-const RowActions = ({ onCreate }: RowActionsProps) => {
+const RowActions = ({ onCreate, onRemove }: RowActionsProps) => {
   const [isHover, setIsHover] = useState<boolean>(false);
 
   return !isHover ? (
@@ -37,10 +37,10 @@ const RowActions = ({ onCreate }: RowActionsProps) => {
     </CustomButton>
   ) : (
     <Wrapper onMouseLeave={() => setIsHover(false)}>
-      <CustomButton onClick={() => onCreate}>
+      <CustomButton onClick={() => onCreate()}>
         <Icon src={createIcon} />
       </CustomButton>
-      <CustomButton>
+      <CustomButton onClick={() => onRemove()}>
         <Icon src={removeRow} />
       </CustomButton>
     </Wrapper>
