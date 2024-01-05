@@ -7,18 +7,8 @@ export interface GetRowsResponse extends IRowResponse {
   child: GetRowsResponse[];
 }
 
-export interface IRowRequest {
-  equipmentCosts: number;
-  estimatedProfit: number;
-  machineOperatorSalary: number;
-  mainCosts: number;
-  materials: number;
-  mimExploitation: number;
-  overheads: number;
+export interface ICreateRowRequest extends IUpdateRowRequest {
   parentId: number | null;
-  rowName: string;
-  salary: number;
-  supportCosts: number;
 }
 export interface IRowResponse {
   equipmentCosts: number;
@@ -37,4 +27,17 @@ export interface IRowResponse {
 export interface IActionRowResponse {
   changed: IRowResponse[];
   current: IRowResponse;
+}
+
+export interface IUpdateRowRequest {
+  equipmentCosts: number;
+  estimatedProfit: number;
+  machineOperatorSalary: number;
+  mainCosts: number;
+  materials: number;
+  mimExploitation: number;
+  overheads: number;
+  rowName: string;
+  salary: number;
+  supportCosts: number;
 }

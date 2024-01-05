@@ -2,68 +2,80 @@ import {
   TableContainer,
   Table as MuiTable,
   TableHead,
-  TableRow,
-  TableCell,
-  styled,
-  tableCellClasses,
   TableBody,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import RowActions from '../RowActions';
-import { useCreateRowMutation } from '../../services/outlay';
-import Input from '../Input';
-import { GetRowsResponse, IRowRequest } from '../../services/outlay/types';
+import {
+  useCreateRowMutation,
+  useDeleteRowMutation,
+  useUpdateRowMutation,
+} from '../../services/outlay';
+import { GetRowsResponse } from '../../services/outlay/types';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import {
+  setIsEdit,
+  setIsNewRow,
+  undoEdition,
+  undoRowCreation,
+} from '../../store/appSlise';
+import { RootState } from '../../store';
+import { IRow } from '../../types';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.secondary.main,
-    color: theme.palette.primary.light,
-    fontSize: 14,
-    borderBottom: '1px solid' + theme.palette.secondary.light,
-  },
-  [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-    backgroundColor: theme.palette.secondary.main,
-    color: theme.palette.primary.main,
-    borderBottom: '1px solid' + theme.palette.secondary.light,
-  },
-  [`& .${tableCellClasses.root}`]: {
-    border: 0,
-  },
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:last-child td, &:last-child th': {
-    border: 0,
-  },
-}));
+import TableCell from './TableCell';
+import { CustomTableRow, EditRow, EmptyRow, StyledRow } from './TableRow';
 
 interface TableProps {
   rows: GetRowsResponse[];
 }
 
-const Table = ({ rows }: TableProps) => {
-  const [createRow, { isError }] = useCreateRowMutation();
-  const [newRow, setNewRow] = useState({
-    equipmentCosts: '',
-    estimatedProfit: '',
-    machineOperatorSalary: 0,
-    mainCosts: 0,
-    materials: 0,
-    mimExploitation: 0,
-    overheads: '',
-    parentId: 0,
-    rowName: '',
-    salary: '',
-    supportCosts: 0,
-  });
+const newRowInitialState = {
+  equipmentCosts: '',
+  estimatedProfit: '',
+  machineOperatorSalary: 0,
+  mainCosts: 0,
+  materials: 0,
+  mimExploitation: 0,
+  overheads: '',
+  parentId: null,
+  rowName: '',
+  salary: '',
+  supportCosts: 0,
+};
 
-  const handleCreateRow = async (row: IRowRequest) => {
-    await createRow(row);
+const Table = ({ rows }: TableProps) => {
+  const dispatch = useAppDispatch();
+
+  const [createRow] = useCreateRowMutation();
+  const [deleteRow] = useDeleteRowMutation();
+  const [updateRow] = useUpdateRowMutation();
+
+  const isRowEdit = useAppSelector((state: RootState) => state.app.isEdit);
+  const isNewRow = useAppSelector((state: RootState) => state.app.isNewRow);
+  const editRowId = useAppSelector((state: RootState) => state.app.editRowId);
+
+  const parentRowId = useAppSelector(
+    (state: RootState) => state.app.parentRowId,
+  );
+
+  const [rowsData, setRowsData] = useState<GetRowsResponse[]>([...rows]);
+  const [newRow, setNewRow] = useState<IRow>(newRowInitialState);
+
+  useEffect(() => {
+    setRowsData(rows);
+  }, [rows]);
+
+  const handleCreateRow = (id: number) => {
+    dispatch(setIsNewRow({ isNewRow: true, parentRowId: id }));
+    dispatch(undoEdition());
+    setNewRow({ ...newRowInitialState, parentId: id });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleDeleteRow = async (id: number) => {
+    await deleteRow(id);
+  };
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     const row = {
       ...newRow,
       equipmentCosts: +newRow.equipmentCosts,
@@ -72,8 +84,19 @@ const Table = ({ rows }: TableProps) => {
       salary: +newRow.salary,
     };
 
-    if (e.key === 'Enter') {
-      handleCreateRow(row);
+    if (e.key === 'Enter' && isRowEdit) {
+      delete (row as { parentId?: number | null }).parentId;
+      await updateRow({ rID: editRowId, body: row }).then(() => {
+        dispatch(undoEdition());
+        setNewRow(newRowInitialState);
+      });
+    }
+
+    if (e.key === 'Enter' && isNewRow) {
+      await createRow(row).then(() => {
+        dispatch(undoRowCreation());
+        setNewRow(newRowInitialState);
+      });
     }
   };
 
@@ -81,6 +104,92 @@ const Table = ({ rows }: TableProps) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setNewRow({ ...newRow, rowName: e.target.value });
+  };
+
+  const recursiveFind = (
+    searchRows: GetRowsResponse[],
+    rowId: number,
+  ): GetRowsResponse | undefined => {
+    for (const row of searchRows) {
+      if (row.id === rowId) {
+        return row;
+      }
+      if (row.child) {
+        const result = recursiveFind(row.child, rowId);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return undefined;
+  };
+
+  const handleDoubleClick = (rowId: number) => {
+    const selectedRow = recursiveFind(rows, rowId);
+    dispatch(setIsEdit({ isEdit: true, editRowId: rowId }));
+    if (selectedRow) {
+      setNewRow({
+        ...newRow,
+        equipmentCosts: selectedRow.equipmentCosts.toString(),
+        estimatedProfit: selectedRow.estimatedProfit.toString(),
+        machineOperatorSalary: selectedRow.machineOperatorSalary,
+        mainCosts: selectedRow.mainCosts,
+        materials: selectedRow.materials,
+        mimExploitation: selectedRow.mimExploitation,
+        overheads: selectedRow.overheads.toString(),
+        rowName: selectedRow.rowName,
+        salary: selectedRow.salary.toString(),
+        supportCosts: selectedRow.supportCosts,
+      });
+    }
+    dispatch(undoRowCreation());
+  };
+
+  const renderRow = (row: GetRowsResponse) => {
+    return (
+      <>
+        {isRowEdit && editRowId === row.id ? (
+          <EditRow
+            newRow={newRow}
+            setNewRow={setNewRow}
+            handleInputValue={handleInputValue}
+            handleKeyDown={handleKeyDown}
+          />
+        ) : (
+          <CustomTableRow
+            key={row.id}
+            handleDoubleClick={() => handleDoubleClick(row.id)}
+            handleCreateRow={() => handleCreateRow(row.id)}
+            handleDeleteRow={() => handleDeleteRow(row.id)}
+            row={row}
+          />
+        )}
+
+        {isNewRow && parentRowId === row.id && (
+          <EmptyRow
+            newRow={newRow}
+            setNewRow={setNewRow}
+            handleInputValue={handleInputValue}
+            handleKeyDown={handleKeyDown}
+          />
+        )}
+      </>
+    );
+  };
+
+  const renderRows = (row: GetRowsResponse): JSX.Element => {
+    if (!row.child) {
+      return renderRow(row);
+    } else {
+      return (
+        <>
+          {renderRow(row)}
+          {row.child.map((nestedRow) => {
+            return renderRows(nestedRow);
+          })}
+        </>
+      );
+    }
   };
 
   return (
@@ -95,82 +204,20 @@ const Table = ({ rows }: TableProps) => {
           <col style={{ width: '12%' }} />
         </colgroup>
         <TableHead>
-          <TableRow>
-            <StyledTableCell>Уровень</StyledTableCell>
-            <StyledTableCell>Наименование работ</StyledTableCell>
-            <StyledTableCell>Основная з/п</StyledTableCell>
-            <StyledTableCell>Оборудование</StyledTableCell>
-            <StyledTableCell>Накладные расходы</StyledTableCell>
-            <StyledTableCell>Сметная прибыль</StyledTableCell>
-          </TableRow>
+          <StyledRow>
+            <TableCell>Уровень</TableCell>
+            <TableCell>Наименование работ</TableCell>
+            <TableCell>Основная з/п</TableCell>
+            <TableCell>Оборудование</TableCell>
+            <TableCell>Накладные расходы</TableCell>
+            <TableCell>Сметная прибыль</TableCell>
+          </StyledRow>
         </TableHead>
+
         <TableBody>
-          {rows.length === 0 && (
-            <StyledTableRow>
-              <StyledTableCell component="th" scope="row">
-                <RowActions onCreate={handleCreateRow} />
-              </StyledTableCell>
-              <StyledTableCell>
-                <Input
-                  value={newRow.rowName}
-                  onChange={(e) => handleInputValue(e)}
-                  onKeyDown={handleKeyDown}
-                />
-              </StyledTableCell>
-              <StyledTableCell>
-                <Input
-                  value={newRow.salary}
-                  onChange={(e) => {
-                    setNewRow({ ...newRow, salary: e.target.value });
-                  }}
-                  type="number"
-                  onKeyDown={handleKeyDown}
-                />
-              </StyledTableCell>
-              <StyledTableCell>
-                <Input
-                  value={newRow.equipmentCosts}
-                  onChange={(e) => {
-                    setNewRow({ ...newRow, equipmentCosts: e.target.value });
-                  }}
-                  type="number"
-                  onKeyDown={handleKeyDown}
-                />
-              </StyledTableCell>
-              <StyledTableCell>
-                <Input
-                  value={newRow.overheads}
-                  onChange={(e) => {
-                    setNewRow({ ...newRow, overheads: e.target.value });
-                  }}
-                  type="number"
-                  onKeyDown={handleKeyDown}
-                />
-              </StyledTableCell>
-              <StyledTableCell>
-                <Input
-                  value={newRow.estimatedProfit}
-                  onChange={(e) => {
-                    setNewRow({ ...newRow, estimatedProfit: e.target.value });
-                  }}
-                  type="number"
-                  onKeyDown={handleKeyDown}
-                />
-              </StyledTableCell>
-            </StyledTableRow>
-          )}
-          {rows.map((row) => (
-            <StyledTableRow key={row.rowName}>
-              <StyledTableCell component="th" scope="row">
-                <RowActions onCreate={handleCreateRow} />
-              </StyledTableCell>
-              <StyledTableCell>{row.rowName}</StyledTableCell>
-              <StyledTableCell>{row.salary}</StyledTableCell>
-              <StyledTableCell>{row.equipmentCosts}</StyledTableCell>
-              <StyledTableCell>{row.overheads}</StyledTableCell>
-              <StyledTableCell>{row.estimatedProfit}</StyledTableCell>
-            </StyledTableRow>
-          ))}
+          {rowsData.map((row) => {
+            return renderRows(row);
+          })}
         </TableBody>
       </MuiTable>
     </TableContainer>

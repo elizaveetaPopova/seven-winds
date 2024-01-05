@@ -4,7 +4,6 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import Header from './components/Header';
 import NavigationPanel from './components/NavigationPanel';
-import { customPalette } from './palette';
 import { cssVar } from './functions';
 import Dashboard from './components/Dashboard';
 
