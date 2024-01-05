@@ -8,7 +8,6 @@ import { cssVar } from './functions';
 import Dashboard from './components/Dashboard';
 
 const Wrapper = styled.div`
-  background-color: var(--main-bg-color);
   height: 100vh;
 `;
 

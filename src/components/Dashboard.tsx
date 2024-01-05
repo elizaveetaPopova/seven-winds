@@ -9,6 +9,7 @@ const DashboardWrapper = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--main-bg-color);
 `;
 
 const Caption = styled.div`
