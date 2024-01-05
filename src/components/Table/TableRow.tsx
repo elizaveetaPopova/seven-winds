@@ -1,10 +1,11 @@
 import { styled, TableRow } from '@mui/material';
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import RowActions from '../RowActions';
 import Input from '../Input';
 import { GetRowsResponse } from '../../services/outlay/types';
 import { IRow } from '../../types';
+import LineDrawing from '../Line';
 
 import TableCell from './TableCell';
 
@@ -160,13 +161,23 @@ export const CustomTableRow = ({
   row,
   handleDoubleClick,
 }: CustomTableRowProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number | undefined>(0);
+
+  useLayoutEffect(() => {
+    setWidth(ref.current?.offsetWidth);
+  }, [width]);
+
+  console.log('width :>> ', width);
+
   return (
     <StyledRow onDoubleClick={() => handleDoubleClick(row.id)}>
-      <TableCell scope="row">
+      <TableCell scope="row" ref={ref}>
         <RowActions
           onCreate={() => handleCreateRow(row.id)}
           onRemove={() => handleDeleteRow(row.id)}
         />
+        {/* <LineDrawing width={} height={} /> */}
       </TableCell>
       <TableCell>{row.rowName}</TableCell>
       <TableCell>{row.salary}</TableCell>
